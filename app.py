@@ -1,13 +1,35 @@
 import streamlit as st
 import pandas as pd
-import joblib
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
+import numpy as np
 
-# Load saved model and encoders
-model = joblib.load('fuel_model.pkl')
-class_encoder = joblib.load('class_encoder.pkl')
-transmission_encoder = joblib.load('transmission_encoder.pkl')
-fuel_encoder = joblib.load('fuel_encoder.pkl')
+# Load the dataset
+@st.cache_data
+def load_data():
+    df = pd.read_csv("clean_fuel.csv")
+    return df
 
+df = load_data()
+
+# Encode categorical features
+class_encoder = LabelEncoder()
+df["VEHICLE CLASS"] = class_encoder.fit_transform(df["VEHICLE CLASS"])
+
+transmission_encoder = LabelEncoder()
+df["TRANSMISSION"] = transmission_encoder.fit_transform(df["TRANSMISSION"])
+
+fuel_encoder = LabelEncoder()
+df["FUEL"] = fuel_encoder.fit_transform(df["FUEL"])
+
+# Define features and target
+X = df[["VEHICLE CLASS", "ENGINE SIZE", "CYLINDERS", "TRANSMISSION", "FUEL", "EMISSIONS"]]
+y = df[["FUEL CONSUMPTION", "HWY (L/100 km)", "COMB (L/100 km)"]]
+
+# Train model
+model = RandomForestRegressor(n_estimators=50, random_state=42)
+model.fit(X, y)
 # Define UI
 st.title("🚗 Fuel Consumption Predictor")
 
